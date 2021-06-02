@@ -1,9 +1,36 @@
 import cgp
-from minatar import GUI
+from minatar import Environment
+
+def argmax(policy):
+    i, max = 0, policy[0]
+    for j in range(policy):
+        if policy[i] > max:
+            max = policy[j]
+            i = j
+    return j
+
+
+def play(individual, display=False):
+    env = Environment("breakout", sticky_action_prob=0.0, random_seed=0)
+    env.reset()
+    is_terminated = False
+    total_reward = 0.0
+    t = 0
+
+    while (not is_terminated) and t < NUM_FRAMES:
+        eval = individual.to_func()
+        policy = eval(env.state())
+        action = argmax(policy)
+        reward, is_terminated = env.act(action)
+        total_reward += reward
+        t += 1
+        if display:
+            env.display_state(1)
+    return total_reward
 
 # -------------Objective Function-------------
 def objective(individual):
-    individual.fitness = ...
+    individual.fitness = play(individual)
     return individual
 
 # -----------Parameters of population, genome, evolutionary algorithm (EA) and evolve function ------------------
