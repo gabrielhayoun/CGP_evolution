@@ -43,7 +43,7 @@ population_params = {"n_parents": 10, "mutation_rate": 0.5, "seed": 8188211}
 
 genome_params = {
     "n_inputs": 100,
-    "n_outputs": 3,
+    "n_outputs": 5,
     "n_columns": 10,
     "n_rows": 1,
     "levels_back": 10,
