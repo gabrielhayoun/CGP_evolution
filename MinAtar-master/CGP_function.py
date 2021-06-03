@@ -1,9 +1,12 @@
 import cgp
 from minatar import Environment
+from Custom_functions import *
 
 NUM_FRAMES = 1000
 MAX_EVALS = 5000
 GAME="breakout"
+
+max_fitness=0
 
 def argmax(policy):
     i, max = 0, policy[0]
@@ -45,34 +48,36 @@ def play(individual, display=False):
         reward, is_terminated = env.act(action)
         total_reward += reward
         t += 1
-        if display and individual.idx%10 == 0:
+        if display:
             env.display_state(1)
-    if display and individual.idx%10 == 0:
+    if display:
         env.close_display()
     return total_reward
 
 
 # -------------Objective Function-------------
 def objective(individual):
-    individual.fitness = play(individual)
+    individual.fitness = play(individual,0)
     return individual
 
 
 # -----------Parameters of population, genome, evolutionary algorithm (EA) and evolve function ------------------
-population_params = {"n_parents": 10,  "seed": 8188211}
+population_params = {"n_parents": 10,  "seed": 8188212}
 
 genome_params = {
     "n_inputs": 100,
-    "n_outputs": 2,
-    "n_columns": 100,
-    "n_rows": 2,
-    "levels_back": 100,
-    "primitives": (cgp.Add, cgp.Sub, cgp.Mul, cgp.Pow, cgp.ConstantFloat),
+    "n_outputs": 3,
+    "n_columns": 20,
+    "n_rows": 10,
+    "levels_back": 10,
+    "primitives": (cgp.Add, cgp.Sub, cgp.Mul, Div, 
+                    #Pow, Pow2, Sqrt, Double, Cos, Sin, Inv, Tanh, Gaussian, 
+                    Min, Max, Transistor, Compare, cgp.ConstantFloat),
 }
 
-ea_params = {"n_offsprings": 10, "tournament_size": 3, "mutation_rate": 0.1,"n_processes":6}
+ea_params = {"n_offsprings": 10, "tournament_size": 2, "mutation_rate": 0.6,"n_processes":10}
 
-evolve_params = {"max_generations": 1000}
+evolve_params = {"max_generations": 10000}#int(MAX_EVALS/population_params["n_parents"])}
 
 # --------Initialize a population and an EA instance
 pop = cgp.Population(**population_params, genome_params=genome_params)
@@ -83,8 +88,25 @@ history = {}
 history["fitness_parents"] = []
 
 
+def colorFunctions (str):
+    funcList = ["Add", "Sub", "Mul", "Div", "Pow", "Pow2", "Sqrt", "Double", "Cos", "Sin", "Inv", "Tanh", "Gaussian", "Min", "Max", "Transistor", "Compare", "ConstantFloat"]
+    for f in funcList :
+        index=str.find(f)
+        if index !=-1:
+            str=str[0:index]+"\033[1;31m"+str[index:index+len(f)]+"\033[1;00m"+str[index+len(f):]
+            while True :
+                index=str.find(f,index+len(f)+10)
+                if index !=-1:
+                    str=str[0:index]+"\033[1;31m"+str[index:index+len(f)]+"\033[1;00m"+str[index+len(f):]
+                else :
+                    break
+    return str
+
 def recording_callback(pop):
-    history["fitness_parents"].append(pop.fitness_parents())
+    # history["fitness_parents"].append(pop.fitness_parents())
+    if pop.generation%50 == 0 :
+        play(pop.champion,True)
+        print("\n"+colorFunctions(cgp.CartesianGraph(pop.champion.genome).print_active_nodes())+"\n")
 
 
 # ----------Execute the evolution------------
